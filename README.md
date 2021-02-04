@@ -46,8 +46,19 @@ resource "custom_sequential_integer" "this" {
   max = 10
 }
 
+resource "custom_pinned_timestamp" "this" {
+  triggers = {
+    seq_id = "${custom_sequential_integer.this.value}"
+  }
+}
+
 output "generated_number" {
   description = "Sequential number"
   value       = custom_sequential_integer.this.value
+}
+
+output "pinned_timestamp" {
+  description = "Pinned timestamp"
+  value       = custom_pinned_timestamp.this.timestamp
 }
 ```

@@ -15,6 +15,7 @@ func New() *schema.Provider {
 
 		ResourcesMap: map[string]*schema.Resource{
 			"custom_sequential_integer": resourceInteger(),
+			"custom_pinned_timestamp":   resourceTimestamp(),
 		},
 	}
 }

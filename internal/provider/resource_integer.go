@@ -19,7 +19,7 @@ func resourceInteger() *schema.Resource {
 			"lifecycle flag set, to avoid conflicts with unique names during the brief period where both the " +
 			"old and new resources exist concurrently.",
 		Create: CreateInteger,
-		Read:   ReadInteger,
+		Read:   schema.Noop,
 		Update: UpdateInteger,
 		Delete: schema.RemoveFromState,
 		Importer: &schema.ResourceImporter{
@@ -84,32 +84,8 @@ func CreateInteger(d *schema.ResourceData, meta interface{}) error {
 	value := min
 
 	d.Set("value", value)
+	d.Set("action", "keep")
 	d.SetId(strconv.Itoa(value))
-
-	return nil
-}
-
-func ReadInteger(d *schema.ResourceData, m interface{}) error {
-	min := d.Get("min").(int)
-	max := d.Get("max").(int)
-
-	if min <= 0 {
-		return fmt.Errorf("Minimum value cannot be less than or equal to Zero")
-	}
-	if max <= min {
-		return fmt.Errorf("Maximum value needs to be greater than minimum value")
-	}
-
-	value, err := strconv.Atoi(d.Id())
-	if err != nil {
-		return fmt.Errorf("Cannot read resource id [%s]: %s", d.Id(), err)
-	}
-
-	if value > max || value < min {
-		value = min
-	}
-
-	d.Set("value", value)
 
 	return nil
 }
@@ -117,6 +93,7 @@ func ReadInteger(d *schema.ResourceData, m interface{}) error {
 func UpdateInteger(d *schema.ResourceData, m interface{}) error {
 	min := d.Get("min").(int)
 	max := d.Get("max").(int)
+	new_keepers := d.HasChange("keepers")
 
 	if min <= 0 {
 		return fmt.Errorf("Minimum value cannot be less than or equal to Zero")
@@ -125,18 +102,20 @@ func UpdateInteger(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("Maximum value needs to be greater than minimum value")
 	}
 
-	value, err := strconv.Atoi(d.Id())
+	id, err := strconv.Atoi(d.Id())
 	if err != nil {
 		return fmt.Errorf("Cannot read resource id [%s]: %s", d.Id(), err)
 	}
 
-	value += 1
-	if value > max || value < min {
-		value = min
+	if new_keepers {
+		id += 1
+	}
+	if id > max || id < min {
+		id = min
 	}
 
-	d.Set("value", value)
-	d.SetId(strconv.Itoa(value))
+	d.Set("value", id)
+	d.SetId(strconv.Itoa(id))
 
 	return nil
 }
